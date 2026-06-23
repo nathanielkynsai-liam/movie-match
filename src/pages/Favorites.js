@@ -18,8 +18,7 @@ function Favorites() {
   };
 
   const editMovie = (id) => {
-    const newTitle =
-      prompt("Enter new movie title");
+    const newTitle = prompt("Enter new title");
 
     if (!newTitle) return;
 
@@ -42,23 +41,33 @@ function Favorites() {
     <div>
       <h1>Favorite Movies</h1>
 
-      {movies.map((movie) => (
-        <div key={movie.id}>
-          <p>{movie.title}</p>
+      {movies.length === 0 ? (
+        <p>No movies found.</p>
+      ) : (
+        movies.map((movie) => (
+          <div key={movie.id}>
+            <h3>{movie.title}</h3>
 
-          <button
-            onClick={() => editMovie(movie.id)}
-          >
-            Edit
-          </button>
+            <p>Genre: {movie.genre}</p>
 
-          <button
-            onClick={() => deleteMovie(movie.id)}
-          >
-            Delete
-          </button>
-        </div>
-      ))}
+            <p>Rating: {movie.rating}</p>
+
+            <button
+              onClick={() => editMovie(movie.id)}
+            >
+              Edit
+            </button>
+
+            <button
+              onClick={() => deleteMovie(movie.id)}
+            >
+              Delete
+            </button>
+
+            <hr />
+          </div>
+        ))
+      )}
     </div>
   );
 }

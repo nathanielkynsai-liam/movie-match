@@ -2,6 +2,8 @@ import { useState } from "react";
 
 function AddMovie() {
   const [title, setTitle] = useState("");
+  const [genre, setGenre] = useState("");
+  const [rating, setRating] = useState("");
 
   const saveMovie = () => {
     const movies =
@@ -9,7 +11,9 @@ function AddMovie() {
 
     movies.push({
       id: Date.now(),
-      title: title
+      title,
+      genre,
+      rating
     });
 
     localStorage.setItem(
@@ -18,7 +22,10 @@ function AddMovie() {
     );
 
     alert("Movie Added");
+
     setTitle("");
+    setGenre("");
+    setRating("");
   };
 
   return (
@@ -31,6 +38,26 @@ function AddMovie() {
         value={title}
         onChange={(e) => setTitle(e.target.value)}
       />
+
+      <br /><br />
+
+      <input
+        type="text"
+        placeholder="Genre"
+        value={genre}
+        onChange={(e) => setGenre(e.target.value)}
+      />
+
+      <br /><br />
+
+      <input
+        type="number"
+        placeholder="Rating"
+        value={rating}
+        onChange={(e) => setRating(e.target.value)}
+      />
+
+      <br /><br />
 
       <button onClick={saveMovie}>
         Save Movie
