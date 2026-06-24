@@ -48,12 +48,12 @@ export default function Register() {
     }
 
     if (password !== confirmPassword) {
-      setError("The passwords do not align.");
+      setError("The passwords do not match.");
       return;
     }
 
     if (password.length < 4) {
-      setError("Your key must be at least 4 characters long.");
+      setError("Your password must be at least 4 characters long.");
       return;
     }
 
@@ -74,19 +74,19 @@ export default function Register() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "The ritual has failed.");
+        setError(data.error || "Registration failed.");
         setLoading(false);
         return;
       }
 
-      setSuccess("Your sigil has been forged. Redirecting to the gates...");
+      setSuccess("Account created successfully. Redirecting to login...");
 
       setTimeout(() => {
         navigate("/");
       }, 1500);
     } catch (err) {
       console.error(err);
-      setError("Cannot reach the server. Is the backend awakened?");
+      setError("Cannot reach the server. Is the backend running?");
       setLoading(false);
     }
   };
@@ -98,18 +98,18 @@ export default function Register() {
           <FilmIcon size={42} />
         </div>
         <h1 className="logo">Movie Match</h1>
-        <p className="subtitle">Forge your sigil to begin the chronicle</p>
+        <p className="subtitle">Create an account to track your movies</p>
 
         {error && <div className="error-msg">{error}</div>}
         {success && <div className="success-msg">{success}</div>}
 
         <form onSubmit={handleRegister}>
           <div className="form-group">
-            <label htmlFor="register-username">Choose Your Name</label>
+            <label htmlFor="register-username">Username</label>
             <input
               id="register-username"
               type="text"
-              placeholder="A name for the records..."
+              placeholder="Your username..."
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
@@ -117,11 +117,11 @@ export default function Register() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="register-password">Secret Key</label>
+            <label htmlFor="register-password">Password</label>
             <input
               id="register-password"
               type="password"
-              placeholder="Forge a key..."
+              placeholder="Your password..."
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
@@ -129,11 +129,11 @@ export default function Register() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="register-confirm">Confirm Key</label>
+            <label htmlFor="register-confirm">Confirm Password</label>
             <input
               id="register-confirm"
               type="password"
-              placeholder="Repeat your key..."
+              placeholder="Repeat your password..."
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               autoComplete="new-password"
@@ -141,13 +141,13 @@ export default function Register() {
           </div>
 
           <button type="submit" className="btn-gold" disabled={loading}>
-            {loading ? <span className="spinner"></span> : "\u2726  Forge Your Sigil"}
+            {loading ? <span className="spinner"></span> : "\u2726  Create Account"}
           </button>
         </form>
 
         <p className="auth-footer">
-          Already inscribed?{" "}
-          <Link to="/">Enter the vault</Link>
+          Already have an account?{" "}
+          <Link to="/">Sign in</Link>
         </p>
       </div>
     </div>

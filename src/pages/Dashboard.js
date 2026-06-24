@@ -620,7 +620,7 @@ export default function Dashboard() {
           </div>
           <span className="username">{user?.username || "User"}</span>
           <button className="btn-ghost btn-sm" onClick={logout}>
-            Depart
+            Sign Out
           </button>
         </div>
       </header>
@@ -646,7 +646,7 @@ export default function Dashboard() {
               {isSearching ? (
                 <div className="search-loading">
                   <span className="spinner spinner-gold"></span>
-                  <span>Scrying...</span>
+                  <span>Searching...</span>
                 </div>
               ) : searchResults.length > 0 ? (
                 <div className="search-results-list">
@@ -681,7 +681,7 @@ export default function Dashboard() {
                   })}
                 </div>
               ) : searchQuery.trim() ? (
-                <div className="search-loading">No visions found for "{searchQuery}"</div>
+                <div className="search-loading">No results found for "{searchQuery}"</div>
               ) : null}
             </div>
           )}
@@ -692,7 +692,7 @@ export default function Dashboard() {
           <div className="section-title">
             <EyeIcon /> The Watchlist
             <span className="count-badge">
-              {watchlist.length} {watchlist.length === 1 ? "vision" : "visions"}
+              {watchlist.length} {watchlist.length === 1 ? "title" : "titles"}
             </span>
           </div>
           
@@ -740,7 +740,7 @@ export default function Dashboard() {
         {/* ── Add Movie Form (Manual) ── */}
         <div className="card">
           <div className="section-title">
-            <QuillIcon /> Add to the Codex Manually
+            <QuillIcon /> Add to Your Movies
           </div>
           <form className="add-movie-form" onSubmit={addMovie}>
             <div className="form-row-top">
@@ -793,7 +793,7 @@ export default function Dashboard() {
                 {adding ? (
                   <span className="spinner"></span>
                 ) : (
-                  "\u2726 Inscribe"
+                  "\u2726 Add"
                 )}
               </button>
             </div>
@@ -803,9 +803,9 @@ export default function Dashboard() {
         {/* ── Movie List (Codex) ── */}
         <div className="card">
           <div className="section-title">
-            <ScrollIcon /> The Codex of Films
+            <ScrollIcon /> Your Movies
             <span className="count-badge">
-              {movies.length} {movies.length === 1 ? "tome" : "tomes"}
+              {movies.length} {movies.length === 1 ? "title" : "titles"}
             </span>
           </div>
 
@@ -815,16 +815,16 @@ export default function Dashboard() {
                 className="spinner spinner-light"
                 style={{ margin: "0 auto" }}
               ></div>
-              <p style={{ marginTop: "16px" }}>Summoning your collection...</p>
+              <p style={{ marginTop: "16px" }}>Loading your collection...</p>
             </div>
           ) : movies.length === 0 ? (
             <div className="empty-state">
               <div className="empty-icon">
                 <ScrollIcon />
               </div>
-              <p>The codex is empty</p>
+              <p>Your collection is empty</p>
               <p className="hint">
-                Inscribe your first film above to begin the chronicle.
+                Add your first title above to begin tracking.
               </p>
             </div>
           ) : (

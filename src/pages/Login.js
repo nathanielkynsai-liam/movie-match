@@ -61,7 +61,7 @@ export default function Login() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "The vault rejects your credentials.");
+        setError(data.message || "Invalid credentials.");
         setLoading(false);
         return;
       }
@@ -73,7 +73,7 @@ export default function Login() {
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
-      setError("Cannot reach the server. Is the backend awakened?");
+      setError("Cannot reach the server. Is the backend running?");
       setLoading(false);
     }
   };
@@ -85,7 +85,7 @@ export default function Login() {
           <FilmIcon size={42} />
         </div>
         <h1 className="logo">Movie Match</h1>
-        <p className="subtitle">Enter the vault to manage your film codex</p>
+        <p className="subtitle">Sign in to manage your collection</p>
 
         {error && <div className="error-msg">{error}</div>}
 
@@ -95,7 +95,7 @@ export default function Login() {
             <input
               id="login-username"
               type="text"
-              placeholder="Your identity..."
+              placeholder="Your username..."
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
@@ -107,7 +107,7 @@ export default function Login() {
             <input
               id="login-password"
               type="password"
-              placeholder="Your secret key..."
+              placeholder="Your password..."
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
@@ -115,13 +115,13 @@ export default function Login() {
           </div>
 
           <button type="submit" className="btn-gold" disabled={loading}>
-            {loading ? <span className="spinner"></span> : "\u2726  Enter the Vault"}
+            {loading ? <span className="spinner"></span> : "\u2726  Sign In"}
           </button>
         </form>
 
         <p className="auth-footer">
           No account yet?{" "}
-          <Link to="/register">Forge your sigil</Link>
+          <Link to="/register">Create an account</Link>
         </p>
       </div>
     </div>
