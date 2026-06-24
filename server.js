@@ -5,6 +5,9 @@ require("dotenv").config();
 
 const authRoutes = require("./routes/auth");
 const movieRoutes = require("./routes/movies");
+const chatRoutes = require("./routes/chat");
+const searchRoutes = require("./routes/search");
+const watchlistRoutes = require("./routes/watchlist");
 
 const app = express();
 
@@ -18,6 +21,9 @@ app.get("/api", (req, res) => {
 
 app.use("/api", authRoutes);
 app.use("/api/movies", movieRoutes);
+app.use("/api", chatRoutes);
+app.use("/api", searchRoutes);
+app.use("/api/watchlist", watchlistRoutes);
 
 const path = require("path");
 

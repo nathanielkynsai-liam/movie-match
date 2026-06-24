@@ -2,6 +2,31 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import API_BASE_URL from "../config";
 
+// SVG Film Reel Icon
+function FilmIcon({ size = 40 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="12" cy="12" r="10" stroke="url(#goldGrad)" strokeWidth="1.5" fill="none" />
+      <circle cx="12" cy="12" r="3" stroke="url(#goldGrad)" strokeWidth="1.5" fill="none" />
+      <circle cx="12" cy="5" r="1.2" fill="#c9a84c" />
+      <circle cx="12" cy="19" r="1.2" fill="#c9a84c" />
+      <circle cx="5" cy="12" r="1.2" fill="#c9a84c" />
+      <circle cx="19" cy="12" r="1.2" fill="#c9a84c" />
+      <circle cx="7.05" cy="7.05" r="1" fill="#a07830" />
+      <circle cx="16.95" cy="7.05" r="1" fill="#a07830" />
+      <circle cx="7.05" cy="16.95" r="1" fill="#a07830" />
+      <circle cx="16.95" cy="16.95" r="1" fill="#a07830" />
+      <defs>
+        <linearGradient id="goldGrad" x1="0" y1="0" x2="24" y2="24">
+          <stop offset="0%" stopColor="#c9a84c" />
+          <stop offset="50%" stopColor="#f0d070" />
+          <stop offset="100%" stopColor="#a07830" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
 export default function Login() {
   const navigate = useNavigate();
 
@@ -15,7 +40,7 @@ export default function Login() {
     setError("");
 
     if (!username.trim() || !password.trim()) {
-      setError("Please fill in all fields");
+      setError("All fields must be filled to proceed.");
       return;
     }
 
@@ -36,7 +61,7 @@ export default function Login() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "Invalid credentials");
+        setError(data.message || "The vault rejects your credentials.");
         setLoading(false);
         return;
       }
@@ -48,7 +73,7 @@ export default function Login() {
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
-      setError("Cannot connect to server. Is the backend running?");
+      setError("Cannot reach the server. Is the backend awakened?");
       setLoading(false);
     }
   };
@@ -56,8 +81,11 @@ export default function Login() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h1 className="logo">🎬 Movie Match</h1>
-        <p className="subtitle">Sign in to manage your movie collection</p>
+        <div className="logo-icon">
+          <FilmIcon size={42} />
+        </div>
+        <h1 className="logo">Movie Match</h1>
+        <p className="subtitle">Enter the vault to manage your film codex</p>
 
         {error && <div className="error-msg">{error}</div>}
 
@@ -67,7 +95,7 @@ export default function Login() {
             <input
               id="login-username"
               type="text"
-              placeholder="Enter your username"
+              placeholder="Your identity..."
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
@@ -79,21 +107,21 @@ export default function Login() {
             <input
               id="login-password"
               type="password"
-              placeholder="Enter your password"
+              placeholder="Your secret key..."
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
             />
           </div>
 
-          <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? <span className="spinner"></span> : "Sign In"}
+          <button type="submit" className="btn-gold" disabled={loading}>
+            {loading ? <span className="spinner"></span> : "\u2726  Enter the Vault"}
           </button>
         </form>
 
         <p className="auth-footer">
-          Don't have an account?{" "}
-          <Link to="/register">Create one</Link>
+          No account yet?{" "}
+          <Link to="/register">Forge your sigil</Link>
         </p>
       </div>
     </div>

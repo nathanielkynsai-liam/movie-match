@@ -12,6 +12,17 @@ const MovieSchema = new mongoose.Schema(
       default: "",
       trim: true
     },
+    director: {
+      type: String,
+      default: "",
+      trim: true
+    },
+    year: {
+      type: Number,
+      default: null,
+      min: 1888,
+      max: 2100
+    },
     rating: {
       type: Number,
       default: 0,
