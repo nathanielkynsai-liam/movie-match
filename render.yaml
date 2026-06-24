@@ -2,7 +2,7 @@ services:
   - type: web
     name: movie-match-api
     runtime: node
-    rootDir: backend
+    rootDir: .
     buildCommand: npm install
     startCommand: node server.js
     envVars:
