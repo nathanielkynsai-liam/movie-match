@@ -8,10 +8,10 @@
   /* Backgrounds */
   --bg-void: #08050f;
   --bg-deep: #0c0819;
-  --bg-card: rgba(21, 15, 40, 0.85);
-  --bg-card-hover: rgba(28, 20, 52, 0.95);
+  --bg-card: #150f28;
+  --bg-card-hover: #1c1434;
   --bg-input: #0c0819;
-  --bg-surface: rgba(15, 10, 28, 0.9);
+  --bg-surface: #0f0a1c;
 
   /* Gold Palette */
   --gold-dark: #7a5a20;
@@ -334,7 +334,7 @@ button {
     radial-gradient(ellipse at 20% 50%, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 20%, rgba(201, 168, 76, 0.06) 0%, transparent 50%),
     radial-gradient(ellipse at 50% 100%, rgba(139, 92, 246, 0.04) 0%, transparent 40%),
-    var(--bg-void);
+    transparent;
   position: relative;
   overflow: hidden;
 }
@@ -496,7 +496,7 @@ button {
   background:
     radial-gradient(ellipse at 20% 10%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
     radial-gradient(ellipse at 80% 80%, rgba(201, 168, 76, 0.04) 0%, transparent 50%),
-    var(--bg-void);
+    transparent;
 }
 
 /* ── Header ── */
@@ -1200,7 +1200,7 @@ button {
 
 .search-input-wrap input {
   width: 100%;
-  padding: 14px 14px 14px 40px;
+  padding: 14px 110px 14px 40px; /* right padding for select */
   font-size: 1rem;
   border-radius: var(--radius-lg);
   background: var(--bg-card);
@@ -1214,6 +1214,26 @@ button {
   border-color: var(--gold);
   box-shadow: 0 0 0 3px var(--gold-glow);
   outline: none;
+}
+
+.search-filter-select {
+  position: absolute;
+  right: 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--gold-text);
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  outline: none;
+  cursor: pointer;
+  z-index: 2;
+  width: auto;
+}
+
+.search-filter-select:focus {
+  border-color: var(--gold-mid);
 }
 
 .search-results-dropdown {
@@ -1663,4 +1683,10 @@ button {
     font-size: 0.65rem;
     padding: 5px 10px;
   }
+}
+
+
+.app-content {
+  position: relative;
+  z-index: 1;
 }
