@@ -1,13 +1,17 @@
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import "./index.css";
+import App from "./App";
 
-export default function App() {
-  return (
-    <div>
-      <h1>Movie Match</h1>
+const root = ReactDOM.createRoot(
+  document.getElementById("root")
+);
 
-      <Login />
-      <Register />
-    </div>
-  );
-}
+root.render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
+);
