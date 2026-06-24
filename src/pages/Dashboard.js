@@ -126,6 +126,15 @@ function CheckIcon() {
   );
 }
 
+function CloseIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
 // IMDB-style star rating display
 function StarRating({ rating }) {
   const fullStars = Math.floor(rating / 2);
@@ -177,6 +186,7 @@ export default function Dashboard() {
   // Data states
   const [movies, setMovies] = useState([]);
   const [watchlist, setWatchlist] = useState([]);
+  const [watchlistTab, setWatchlistTab] = useState("all"); // "all", "movie", "series", "anime"
   
   // Loading states
   const [loadingMovies, setLoadingMovies] = useState(true);
@@ -184,10 +194,16 @@ export default function Dashboard() {
 
   // Search states
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchTypeFilter, setSearchTypeFilter] = useState("all");
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const searchTimeoutRef = useRef(null);
+
+  // Result details modal state
+  const [selectedResult, setSelectedResult] = useState(null);
+  const [resultDetails, setResultDetails] = useState(null);
+  const [loadingDetails, setLoadingDetails] = useState(false);
 
   // Manual Add states
   const [title, setTitle] = useState("");
@@ -195,6 +211,7 @@ export default function Dashboard() {
   const [director, setDirector] = useState("");
   const [year, setYear] = useState("");
   const [rating, setRating] = useState("");
+  const [mediaType, setMediaType] = useState("movie"); // "movie", "series", "anime"
   const [adding, setAdding] = useState(false);
 
   // Edit state
@@ -204,6 +221,7 @@ export default function Dashboard() {
   const [editDirector, setEditDirector] = useState("");
   const [editYear, setEditYear] = useState("");
   const [editRating, setEditRating] = useState("");
+  const [editMediaType, setEditMediaType] = useState("");
 
   // AI Chat state
   const [chatMessages, setChatMessages] = useState([
@@ -256,10 +274,7 @@ export default function Dashboard() {
   }, []);
 
   // ── SEARCH LOGIC ──
-  const handleSearchChange = (e) => {
-    const q = e.target.value;
-    setSearchQuery(q);
-    
+  const performSearch = (q, typeFilter) => {
     if (!q.trim()) {
       setSearchResults([]);
       setShowSearchResults(false);
@@ -275,9 +290,12 @@ export default function Dashboard() {
 
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(q)}`, {
-          headers: authHeaders(),
-        });
+        let url = `${API_BASE_URL}/api/search?q=${encodeURIComponent(q)}`;
+        if (typeFilter !== "all") {
+          url += `&type=${typeFilter}`;
+        }
+
+        const res = await fetch(url, { headers: authHeaders() });
         
         if (res.status === 401) {
           logout();
@@ -292,6 +310,43 @@ export default function Dashboard() {
         setIsSearching(false);
       }
     }, 400); // 400ms debounce
+  };
+
+  const handleSearchChange = (e) => {
+    const q = e.target.value;
+    setSearchQuery(q);
+    performSearch(q, searchTypeFilter);
+  };
+
+  const handleFilterChange = (e) => {
+    const type = e.target.value;
+    setSearchTypeFilter(type);
+    performSearch(searchQuery, type);
+  };
+
+  const handleResultClick = async (result) => {
+    setShowSearchResults(false);
+    setSelectedResult(result);
+    setLoadingDetails(true);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/search/${result.imdbID}`, {
+        headers: authHeaders()
+      });
+      if (res.status === 401) return logout();
+      if (res.ok) {
+        const details = await res.json();
+        // Override media type if we selected anime from the filter
+        if (result.mediaType === "anime") {
+          details.mediaType = "anime";
+        }
+        setResultDetails(details);
+      }
+    } catch (err) {
+      console.error("Failed to load details:", err);
+    } finally {
+      setLoadingDetails(false);
+    }
   };
 
   // ── WATCHLIST LOGIC ──
@@ -311,11 +366,7 @@ export default function Dashboard() {
   };
 
   const addToWatchlist = async (item) => {
-    // Check if already in watchlist
-    if (watchlist.some(w => w.imdbID === item.imdbID && item.imdbID)) {
-      return; // Already added
-    }
-
+    if (watchlist.some(w => w.imdbID === item.imdbID && item.imdbID)) return;
     try {
       const res = await fetch(`${API_BASE_URL}/api/watchlist`, {
         method: "POST",
@@ -328,10 +379,8 @@ export default function Dashboard() {
           imdbID: item.imdbID
         }),
       });
-
       if (res.status === 401) return logout();
       if (!res.ok) throw new Error("Failed to add to watchlist");
-
       const newItem = await res.json();
       setWatchlist([newItem, ...watchlist]);
     } catch (err) {
@@ -346,7 +395,6 @@ export default function Dashboard() {
         headers: authHeaders(),
       });
       if (res.status === 401) return logout();
-      
       setWatchlist(watchlist.filter(w => w._id !== id));
     } catch (err) {
       console.error("Failed to remove from watchlist:", err);
@@ -355,27 +403,48 @@ export default function Dashboard() {
 
   const moveToCodex = async (item) => {
     try {
-      // 1. Add to Codex
       const res = await fetch(`${API_BASE_URL}/api/movies`, {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify({
           title: item.title,
-          year: item.year ? Number(item.year.substring(0, 4)) : null, // handle "2020-2023" formats
+          year: item.year ? Number(item.year.substring(0, 4)) : null,
           director: item.director || "",
           genre: item.genre || item.mediaType || "",
           rating: 0,
+          mediaType: item.mediaType
         }),
       });
-
       if (res.status === 401) return logout();
       const newMovie = await res.json();
       setMovies([newMovie, ...movies]);
-
-      // 2. Remove from Watchlist
       await removeFromWatchlist(item._id);
     } catch (err) {
       console.error("Failed to move to codex:", err);
+    }
+  };
+
+  // Add from Details Modal directly to Codex
+  const addToMoviesDirectly = async (details) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/movies`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({
+          title: details.title,
+          year: details.year ? Number(details.year.substring(0, 4)) : null,
+          director: details.director || "",
+          genre: details.genre || "",
+          rating: 0,
+          mediaType: details.mediaType
+        }),
+      });
+      if (res.status === 401) return logout();
+      const newMovie = await res.json();
+      setMovies([newMovie, ...movies]);
+      setSelectedResult(null); // close modal
+    } catch (err) {
+      console.error("Failed to add movie:", err);
     }
   };
 
@@ -385,12 +454,7 @@ export default function Dashboard() {
       const res = await fetch(`${API_BASE_URL}/api/movies`, {
         headers: authHeaders(),
       });
-
-      if (res.status === 401) {
-        logout();
-        return;
-      }
-
+      if (res.status === 401) return logout();
       const data = await res.json();
       setMovies(data);
     } catch (err) {
@@ -403,11 +467,8 @@ export default function Dashboard() {
   // ── CREATE ──
   const addMovie = async (e) => {
     e.preventDefault();
-
     if (!title.trim()) return;
-
     setAdding(true);
-
     try {
       const res = await fetch(`${API_BASE_URL}/api/movies`, {
         method: "POST",
@@ -418,16 +479,11 @@ export default function Dashboard() {
           director: director.trim(),
           year: year ? Number(year) : null,
           rating: rating ? Number(rating) : 0,
+          mediaType
         }),
       });
-
-      if (res.status === 401) {
-        logout();
-        return;
-      }
-
+      if (res.status === 401) return logout();
       const newMovie = await res.json();
-
       setMovies([newMovie, ...movies]);
       setTitle("");
       setGenre("");
@@ -449,6 +505,7 @@ export default function Dashboard() {
     setEditDirector(movie.director || "");
     setEditYear(movie.year || "");
     setEditRating(movie.rating || "");
+    setEditMediaType(movie.mediaType || "movie");
   };
 
   const cancelEdit = () => {
@@ -458,11 +515,11 @@ export default function Dashboard() {
     setEditDirector("");
     setEditYear("");
     setEditRating("");
+    setEditMediaType("");
   };
 
   const saveEdit = async (id) => {
     if (!editTitle.trim()) return;
-
     try {
       const res = await fetch(`${API_BASE_URL}/api/movies/${id}`, {
         method: "PUT",
@@ -473,18 +530,12 @@ export default function Dashboard() {
           director: editDirector.trim(),
           year: editYear ? Number(editYear) : null,
           rating: editRating ? Number(editRating) : 0,
+          mediaType: editMediaType
         }),
       });
-
-      if (res.status === 401) {
-        logout();
-        return;
-      }
-
+      if (res.status === 401) return logout();
       const updatedMovie = await res.json();
-
       setMovies(movies.map((m) => (m._id === id ? updatedMovie : m)));
-
       cancelEdit();
     } catch (err) {
       console.error("Failed to update movie:", err);
@@ -498,12 +549,7 @@ export default function Dashboard() {
         method: "DELETE",
         headers: authHeaders(),
       });
-
-      if (res.status === 401) {
-        logout();
-        return;
-      }
-
+      if (res.status === 401) return logout();
       setMovies(movies.filter((m) => m._id !== id));
     } catch (err) {
       console.error("Failed to delete movie:", err);
@@ -513,25 +559,16 @@ export default function Dashboard() {
   // ── AI CHAT ──
   const sendChat = async (message) => {
     if (!message || !message.trim()) return;
-
     const userMessage = message.trim();
     setChatInput("");
     setChatError("");
 
-    // Add user message to chat
-    const updatedMessages = [
-      ...chatMessages,
-      { role: "user", content: userMessage },
-    ];
+    const updatedMessages = [...chatMessages, { role: "user", content: userMessage }];
     setChatMessages(updatedMessages);
     setChatLoading(true);
 
     try {
-      // Build conversation history (exclude the initial greeting)
-      const conversationHistory = updatedMessages
-        .slice(1) // skip initial greeting
-        .map((m) => ({ role: m.role, content: m.content }));
-
+      const conversationHistory = updatedMessages.slice(1).map((m) => ({ role: m.role, content: m.content }));
       const res = await fetch(`${API_BASE_URL}/api/chat`, {
         method: "POST",
         headers: authHeaders(),
@@ -543,6 +580,7 @@ export default function Dashboard() {
             director: m.director,
             year: m.year,
             rating: m.rating,
+            mediaType: m.mediaType
           })),
           watchlist: watchlist.map(w => ({
             title: w.title,
@@ -553,28 +591,18 @@ export default function Dashboard() {
         }),
       });
 
-      if (res.status === 401) {
-        logout();
-        return;
-      }
-
+      if (res.status === 401) return logout();
       const data = await res.json();
-
       if (!res.ok) {
         setChatError(data.error || "The oracle could not be reached.");
         setChatLoading(false);
         return;
       }
 
-      setChatMessages([
-        ...updatedMessages,
-        { role: "assistant", content: data.reply },
-      ]);
+      setChatMessages([...updatedMessages, { role: "assistant", content: data.reply }]);
     } catch (err) {
       console.error("Chat error:", err);
-      setChatError(
-        "Cannot reach the Arcane Advisor. Ensure the server is running."
-      );
+      setChatError("Cannot reach the Arcane Advisor. Ensure the server is running.");
     } finally {
       setChatLoading(false);
     }
@@ -596,7 +624,11 @@ export default function Dashboard() {
     navigate("/");
   };
 
-  // Quick-action chips
+  // Filtered Watchlist based on tabs
+  const filteredWatchlist = watchlistTab === "all" 
+    ? watchlist 
+    : watchlist.filter(w => w.mediaType?.toLowerCase() === watchlistTab);
+
   const quickChips = [
     "What should I watch next?",
     "Recommend a good anime",
@@ -632,9 +664,19 @@ export default function Dashboard() {
         <div className="search-container">
           <div className="search-input-wrap">
             <SearchIcon />
+            <select 
+              className="search-filter-select" 
+              value={searchTypeFilter} 
+              onChange={handleFilterChange}
+            >
+              <option value="all">All</option>
+              <option value="movie">Movie</option>
+              <option value="series">Series</option>
+              <option value="anime">Anime</option>
+            </select>
             <input 
               type="text" 
-              placeholder="Search the OMDB archives for movies, series, or anime..." 
+              placeholder="Search movies, series, or anime..." 
               value={searchQuery}
               onChange={handleSearchChange}
               onFocus={() => { if(searchQuery.trim()) setShowSearchResults(true); }}
@@ -653,7 +695,7 @@ export default function Dashboard() {
                   {searchResults.map((result) => {
                     const isAdded = watchlist.some(w => w.imdbID === result.imdbID);
                     return (
-                      <div key={result.imdbID} className="search-result-item">
+                      <div key={result.imdbID} className="search-result-item" onClick={() => handleResultClick(result)}>
                         <div className="search-result-poster">
                           {result.poster ? (
                             <img src={result.poster} alt={result.title} />
@@ -670,7 +712,7 @@ export default function Dashboard() {
                         </div>
                         <button 
                           className={`btn-ghost btn-sm ${isAdded ? 'added' : ''}`}
-                          onClick={() => addToWatchlist(result)}
+                          onClick={(e) => { e.stopPropagation(); addToWatchlist(result); }}
                           disabled={isAdded}
                         >
                           {isAdded ? <CheckIcon /> : <PlusIcon />}
@@ -689,25 +731,32 @@ export default function Dashboard() {
 
         {/* ── Watchlist ── */}
         <div className="card">
-          <div className="section-title">
-            <EyeIcon /> The Watchlist
-            <span className="count-badge">
-              {watchlist.length} {watchlist.length === 1 ? "title" : "titles"}
-            </span>
+          <div className="section-title-row">
+            <div className="section-title">
+              <EyeIcon /> The Watchlist
+              <span className="count-badge">
+                {filteredWatchlist.length} {filteredWatchlist.length === 1 ? "title" : "titles"}
+              </span>
+            </div>
+            <div className="watchlist-tabs">
+              <button className={`tab-btn ${watchlistTab === 'all' ? 'active' : ''}`} onClick={() => setWatchlistTab('all')}>All</button>
+              <button className={`tab-btn ${watchlistTab === 'movie' ? 'active' : ''}`} onClick={() => setWatchlistTab('movie')}>Movies</button>
+              <button className={`tab-btn ${watchlistTab === 'series' ? 'active' : ''}`} onClick={() => setWatchlistTab('series')}>Series</button>
+              <button className={`tab-btn ${watchlistTab === 'anime' ? 'active' : ''}`} onClick={() => setWatchlistTab('anime')}>Anime</button>
+            </div>
           </div>
           
           {loadingWatchlist ? (
             <div className="empty-state">
               <div className="spinner spinner-light" style={{ margin: "0 auto" }}></div>
             </div>
-          ) : watchlist.length === 0 ? (
+          ) : filteredWatchlist.length === 0 ? (
             <div className="empty-state">
-              <p>Your watchlist is empty.</p>
-              <p className="hint">Search the archives above to add titles you wish to see.</p>
+              <p>No titles found in this category.</p>
             </div>
           ) : (
             <div className="watchlist-grid">
-              {watchlist.map(item => (
+              {filteredWatchlist.map(item => (
                 <div key={item._id} className="watchlist-item">
                   <div className="watchlist-poster">
                     {item.poster ? (
@@ -746,10 +795,20 @@ export default function Dashboard() {
             <div className="form-row-top">
               <input
                 id="add-title"
-                placeholder="Film title *"
+                placeholder="Title *"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
               />
+              <select
+                className="input-sm"
+                value={mediaType}
+                onChange={(e) => setMediaType(e.target.value)}
+                style={{ width: "120px" }}
+              >
+                <option value="movie">Movie</option>
+                <option value="series">Series</option>
+                <option value="anime">Anime</option>
+              </select>
               <input
                 id="add-director"
                 placeholder="Director..."
@@ -790,11 +849,7 @@ export default function Dashboard() {
                 className="btn-gold"
                 disabled={adding || !title.trim()}
               >
-                {adding ? (
-                  <span className="spinner"></span>
-                ) : (
-                  "\u2726 Add"
-                )}
+                {adding ? <span className="spinner"></span> : "\u2726 Add"}
               </button>
             </div>
           </form>
@@ -811,112 +866,49 @@ export default function Dashboard() {
 
           {loadingMovies ? (
             <div className="empty-state">
-              <div
-                className="spinner spinner-light"
-                style={{ margin: "0 auto" }}
-              ></div>
+              <div className="spinner spinner-light" style={{ margin: "0 auto" }}></div>
               <p style={{ marginTop: "16px" }}>Loading your collection...</p>
             </div>
           ) : movies.length === 0 ? (
             <div className="empty-state">
-              <div className="empty-icon">
-                <ScrollIcon />
-              </div>
+              <div className="empty-icon"><ScrollIcon /></div>
               <p>Your collection is empty</p>
-              <p className="hint">
-                Add your first title above to begin tracking.
-              </p>
+              <p className="hint">Add your first title above to begin tracking.</p>
             </div>
           ) : (
             <div className="movies-grid">
               {movies.map((movie, idx) => (
-                <div
-                  key={movie._id}
-                  className={`movie-card ${
-                    editingId === movie._id ? "editing" : ""
-                  }`}
-                  style={{ animationDelay: `${idx * 0.05}s` }}
-                >
+                <div key={movie._id} className={`movie-card ${editingId === movie._id ? "editing" : ""}`} style={{ animationDelay: `${idx * 0.05}s` }}>
                   {editingId === movie._id ? (
-                    /* ── Edit Mode ── */
                     <>
                       <div className="edit-form">
-                        <input
-                          id={`edit-title-${movie._id}`}
-                          value={editTitle}
-                          onChange={(e) => setEditTitle(e.target.value)}
-                          placeholder="Title"
-                          style={{ flex: 2 }}
-                        />
-                        <input
-                          id={`edit-director-${movie._id}`}
-                          value={editDirector}
-                          onChange={(e) => setEditDirector(e.target.value)}
-                          placeholder="Director"
-                          style={{ flex: 1 }}
-                        />
-                        <input
-                          id={`edit-genre-${movie._id}`}
-                          value={editGenre}
-                          onChange={(e) => setEditGenre(e.target.value)}
-                          placeholder="Genre"
-                          style={{ flex: 1 }}
-                        />
-                        <input
-                          id={`edit-year-${movie._id}`}
-                          type="number"
-                          min="1888"
-                          max="2100"
-                          value={editYear}
-                          onChange={(e) => setEditYear(e.target.value)}
-                          placeholder="Year"
-                          style={{ width: "75px", flex: "none" }}
-                        />
-                        <input
-                          id={`edit-rating-${movie._id}`}
-                          type="number"
-                          min="0"
-                          max="10"
-                          step="0.1"
-                          value={editRating}
-                          onChange={(e) => setEditRating(e.target.value)}
-                          placeholder="Rating"
-                          style={{ width: "70px", flex: "none" }}
-                        />
+                        <input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} placeholder="Title" style={{ flex: 2 }} />
+                        <select value={editMediaType} onChange={(e) => setEditMediaType(e.target.value)} style={{ width: "90px" }}>
+                          <option value="movie">Movie</option>
+                          <option value="series">Series</option>
+                          <option value="anime">Anime</option>
+                        </select>
+                        <input value={editDirector} onChange={(e) => setEditDirector(e.target.value)} placeholder="Director" style={{ flex: 1 }} />
+                        <input value={editGenre} onChange={(e) => setEditGenre(e.target.value)} placeholder="Genre" style={{ flex: 1 }} />
+                        <input type="number" min="1888" max="2100" value={editYear} onChange={(e) => setEditYear(e.target.value)} placeholder="Year" style={{ width: "70px" }} />
+                        <input type="number" min="0" max="10" step="0.1" value={editRating} onChange={(e) => setEditRating(e.target.value)} placeholder="Rating" style={{ width: "70px" }} />
                       </div>
                       <div className="movie-actions">
-                        <button
-                          className="btn-save"
-                          onClick={() => saveEdit(movie._id)}
-                        >
-                          Save
-                        </button>
-                        <button className="btn-ghost btn-sm" onClick={cancelEdit}>
-                          Cancel
-                        </button>
+                        <button className="btn-save" onClick={() => saveEdit(movie._id)}>Save</button>
+                        <button className="btn-ghost btn-sm" onClick={cancelEdit}>Cancel</button>
                       </div>
                     </>
                   ) : (
-                    /* ── Display Mode ── */
                     <>
                       <div className="movie-info">
                         <div className="movie-title-row">
                           <h3>{movie.title}</h3>
-                          {movie.year && (
-                            <span className="movie-year">({movie.year})</span>
-                          )}
+                          {movie.year && <span className="movie-year">({movie.year})</span>}
+                          <MediaTypeBadge type={movie.mediaType} />
                         </div>
                         <div className="movie-meta">
-                          {movie.director && (
-                            <span className="director-tag">
-                              <DirectorIcon /> {movie.director}
-                            </span>
-                          )}
-                          {movie.genre && (
-                            <span className="genre-tag">
-                              <MaskIcon /> {movie.genre}
-                            </span>
-                          )}
+                          {movie.director && <span className="director-tag"><DirectorIcon /> {movie.director}</span>}
+                          {movie.genre && <span className="genre-tag"><MaskIcon /> {movie.genre}</span>}
                         </div>
                         <div className="movie-rating-row">
                           <StarRating rating={movie.rating || 0} />
@@ -924,18 +916,8 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <div className="movie-actions">
-                        <button
-                          className="btn-edit"
-                          onClick={() => startEdit(movie)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          className="btn-remove"
-                          onClick={() => deleteMovie(movie._id)}
-                        >
-                          Remove
-                        </button>
+                        <button className="btn-edit" onClick={() => startEdit(movie)}>Edit</button>
+                        <button className="btn-remove" onClick={() => deleteMovie(movie._id)}>Remove</button>
                       </div>
                     </>
                   )}
@@ -949,31 +931,20 @@ export default function Dashboard() {
         <div className="card ai-card">
           <div className="ai-header">
             <div className="wizard-avatar-wrap">
-              <img
-                src="/wizard.png"
-                alt="The Arcane Advisor"
-                className="wizard-avatar"
-              />
+              <img src="/wizard.png" alt="The Arcane Advisor" className="wizard-avatar" />
             </div>
             <div>
               <div className="ai-title">The Arcane Advisor</div>
-              <div className="ai-subtitle">
-                Powered by Groq &middot; GPT-OSS
-              </div>
+              <div className="ai-subtitle">Powered by Groq &middot; GPT-OSS</div>
             </div>
           </div>
 
-          {/* Chat Messages */}
           <div className="ai-messages">
             {chatMessages.map((msg, idx) =>
               msg.role === "assistant" ? (
                 <div key={idx} className="ai-msg">
                   <div className="ai-msg-header">
-                    <img
-                      src="/wizard.png"
-                      alt=""
-                      className="ai-msg-avatar"
-                    />
+                    <img src="/wizard.png" alt="" className="ai-msg-avatar" />
                     <span className="ai-msg-label">The Arcane Advisor</span>
                   </div>
                   <div className="ai-msg-oracle">{msg.content}</div>
@@ -985,67 +956,108 @@ export default function Dashboard() {
                 </div>
               )
             )}
-
-            {/* Typing indicator */}
             {chatLoading && (
               <div className="ai-typing">
-                <img
-                  src="/wizard.png"
-                  alt=""
-                  className="ai-msg-avatar"
-                  style={{ opacity: 0.7 }}
-                />
+                <img src="/wizard.png" alt="" className="ai-msg-avatar" style={{ opacity: 0.7 }} />
                 <div className="ai-typing-dots">
-                  <div className="ai-typing-dot"></div>
-                  <div className="ai-typing-dot"></div>
-                  <div className="ai-typing-dot"></div>
+                  <div className="ai-typing-dot"></div><div className="ai-typing-dot"></div><div className="ai-typing-dot"></div>
                 </div>
               </div>
             )}
-
             <div ref={chatEndRef} />
           </div>
 
-          {/* Error */}
           {chatError && <div className="ai-error">{chatError}</div>}
 
-          {/* Quick Action Chips */}
           <div className="ai-chips">
             {quickChips.map((chip, idx) => (
-              <button
-                key={idx}
-                className="ai-chip"
-                onClick={() => handleChipClick(chip)}
-                disabled={chatLoading}
-              >
-                {chip}
-              </button>
+              <button key={idx} className="ai-chip" onClick={() => handleChipClick(chip)} disabled={chatLoading}>{chip}</button>
             ))}
           </div>
 
-          {/* Input */}
           <form className="ai-input-row" onSubmit={handleChatSubmit}>
-            <input
-              id="ai-chat-input"
-              placeholder="Ask the oracle anything about your collection..."
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              disabled={chatLoading}
-            />
-            <button
-              type="submit"
-              className="btn-arcane"
-              disabled={chatLoading || !chatInput.trim()}
-            >
-              {chatLoading ? (
-                <span className="spinner spinner-light"></span>
-              ) : (
-                "\u2726 Consult"
-              )}
+            <input id="ai-chat-input" placeholder="Ask the oracle anything about your collection..." value={chatInput} onChange={(e) => setChatInput(e.target.value)} disabled={chatLoading} />
+            <button type="submit" className="btn-arcane" disabled={chatLoading || !chatInput.trim()}>
+              {chatLoading ? <span className="spinner spinner-light"></span> : "\u2726 Consult"}
             </button>
           </form>
         </div>
       </div>
+
+      {/* ── Search Details Modal ── */}
+      {selectedResult && (
+        <div className="modal-backdrop" onClick={() => setSelectedResult(null)}>
+          <div className="modal-content result-details-modal" onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setSelectedResult(null)}>
+              <CloseIcon />
+            </button>
+            
+            {loadingDetails ? (
+              <div className="modal-loading">
+                <span className="spinner spinner-gold"></span>
+                <p>Loading details...</p>
+              </div>
+            ) : resultDetails ? (
+              <div className="details-layout">
+                <div className="details-poster">
+                  {resultDetails.poster ? (
+                    <img src={resultDetails.poster} alt={resultDetails.title} />
+                  ) : (
+                    <div className="poster-placeholder"><FilmIcon size={40}/></div>
+                  )}
+                </div>
+                <div className="details-info">
+                  <div className="details-header">
+                    <h2>{resultDetails.title}</h2>
+                    <div className="details-meta-row">
+                      {resultDetails.year && <span>{resultDetails.year}</span>}
+                      {resultDetails.runtime && resultDetails.runtime !== "N/A" && <span>&bull; {resultDetails.runtime}</span>}
+                      <MediaTypeBadge type={resultDetails.mediaType} />
+                    </div>
+                  </div>
+                  
+                  <div className="details-body">
+                    {resultDetails.plot && resultDetails.plot !== "N/A" && <p className="plot">{resultDetails.plot}</p>}
+                    
+                    <div className="details-grid">
+                      {resultDetails.genre && resultDetails.genre !== "N/A" && (
+                        <div><span className="label">Genre:</span> {resultDetails.genre}</div>
+                      )}
+                      {resultDetails.director && resultDetails.director !== "N/A" && (
+                        <div><span className="label">Director:</span> {resultDetails.director}</div>
+                      )}
+                      {resultDetails.actors && resultDetails.actors !== "N/A" && (
+                        <div style={{gridColumn: "1 / -1"}}><span className="label">Actors:</span> {resultDetails.actors}</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="details-actions">
+                    <button 
+                      className="btn-ghost" 
+                      onClick={() => {
+                        addToWatchlist(resultDetails);
+                        setSelectedResult(null);
+                      }}
+                    >
+                      <PlusIcon /> Add to Watchlist
+                    </button>
+                    <button 
+                      className="btn-gold" 
+                      onClick={() => addToMoviesDirectly(resultDetails)}
+                    >
+                      <CheckIcon /> Add to Your Movies
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="modal-loading">Failed to load details.</div>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

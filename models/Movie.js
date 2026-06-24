@@ -29,6 +29,11 @@ const MovieSchema = new mongoose.Schema(
       min: 0,
       max: 10
     },
+    mediaType: {
+      type: String,
+      enum: ["movie", "series", "anime", ""],
+      default: ""
+    },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

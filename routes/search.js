@@ -22,8 +22,15 @@ router.get("/search", auth, async (req, res) => {
 
     // Build OMDB URL
     let url = `${OMDB_BASE}?apikey=${apiKey}&s=${encodeURIComponent(q.trim())}`;
-    if (type && (type === "movie" || type === "series")) {
-      url += `&type=${type}`;
+    
+    // Handle anime (OMDB treats anime as series)
+    let omdbType = type;
+    if (type === "anime") {
+      omdbType = "series";
+    }
+
+    if (omdbType && (omdbType === "movie" || omdbType === "series")) {
+      url += `&type=${omdbType}`;
     }
     if (page) {
       url += `&page=${page}`;
@@ -41,7 +48,7 @@ router.get("/search", auth, async (req, res) => {
       title: item.Title,
       year: item.Year,
       imdbID: item.imdbID,
-      mediaType: item.Type,
+      mediaType: type === "anime" ? "anime" : item.Type, // Override type if anime was selected
       poster: item.Poster !== "N/A" ? item.Poster : null,
     }));
 

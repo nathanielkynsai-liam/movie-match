@@ -43,7 +43,8 @@ router.post("/chat", auth, async (req, res) => {
           const genre = m.genre ? ` (${m.genre})` : "";
           const director = m.director ? `, Dir: ${m.director}` : "";
           const year = m.year ? ` [${m.year}]` : "";
-          return `  - "${m.title}"${year}${genre}${director} — ${stars}`;
+          const type = m.mediaType ? ` [${m.mediaType.toUpperCase()}]` : "";
+          return `  - "${m.title}"${year}${type}${genre}${director} — ${stars}`;
         })
         .join("\n");
       collectionContext = `The user's rated collection (${movies.length} titles):\n${movieList}`;
