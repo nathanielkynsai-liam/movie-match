@@ -18,11 +18,18 @@ export default function Dashboard() {
   const [editGenre, setEditGenre] = useState("");
   const [editRating, setEditRating] = useState("");
 
-  // Get logged-in user
+  // Get logged-in user and token
   const user = JSON.parse(localStorage.getItem("moviematch_user") || "null");
+  const token = localStorage.getItem("moviematch_token");
+
+  // Helper: create auth headers for API requests
+  const authHeaders = () => ({
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${token}`
+  });
 
   useEffect(() => {
-    if (!user) {
+    if (!user || !token) {
       navigate("/");
       return;
     }
@@ -34,7 +41,15 @@ export default function Dashboard() {
   // ── READ ──
   const loadMovies = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/movies`);
+      const res = await fetch(`${API_BASE_URL}/api/movies`, {
+        headers: authHeaders()
+      });
+
+      if (res.status === 401) {
+        logout();
+        return;
+      }
+
       const data = await res.json();
       setMovies(data);
     } catch (err) {
@@ -55,15 +70,18 @@ export default function Dashboard() {
     try {
       const res = await fetch(`${API_BASE_URL}/api/movies`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: authHeaders(),
         body: JSON.stringify({
           title: title.trim(),
           genre: genre.trim(),
           rating: rating ? Number(rating) : 0
         })
       });
+
+      if (res.status === 401) {
+        logout();
+        return;
+      }
 
       const newMovie = await res.json();
 
@@ -99,15 +117,18 @@ export default function Dashboard() {
     try {
       const res = await fetch(`${API_BASE_URL}/api/movies/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: authHeaders(),
         body: JSON.stringify({
           title: editTitle.trim(),
           genre: editGenre.trim(),
           rating: editRating ? Number(editRating) : 0
         })
       });
+
+      if (res.status === 401) {
+        logout();
+        return;
+      }
 
       const updatedMovie = await res.json();
 
@@ -124,9 +145,15 @@ export default function Dashboard() {
   // ── DELETE ──
   const deleteMovie = async (id) => {
     try {
-      await fetch(`${API_BASE_URL}/api/movies/${id}`, {
-        method: "DELETE"
+      const res = await fetch(`${API_BASE_URL}/api/movies/${id}`, {
+        method: "DELETE",
+        headers: authHeaders()
       });
+
+      if (res.status === 401) {
+        logout();
+        return;
+      }
 
       setMovies(movies.filter((m) => m._id !== id));
     } catch (err) {
@@ -137,6 +164,7 @@ export default function Dashboard() {
   // ── LOGOUT ──
   const logout = () => {
     localStorage.removeItem("moviematch_user");
+    localStorage.removeItem("moviematch_token");
     navigate("/");
   };
 

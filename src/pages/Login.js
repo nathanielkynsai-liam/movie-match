@@ -41,7 +41,8 @@ export default function Login() {
         return;
       }
 
-      // Store login state
+      // Store JWT token and user info
+      localStorage.setItem("moviematch_token", data.token);
       localStorage.setItem("moviematch_user", JSON.stringify(data.user));
 
       navigate("/dashboard");
