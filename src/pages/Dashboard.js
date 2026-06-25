@@ -227,8 +227,10 @@ export default function Dashboard() {
   const [chatMessages, setChatMessages] = useState([
     {
       role: "assistant",
-      content:
-        "Greetings, cinephile. I am your Arcane Advisor \u2014 ask me anything about your collection, or seek recommendations from the vast realm of cinema, series, and anime.",
+      content: {
+        chat_response: "Greetings, cinephile. I am your Arcane Advisor \u2014 ask me anything about your collection, or seek recommendations from the vast realm of cinema, series, and anime.",
+        recommendations: []
+      }
     },
   ]);
   const [chatInput, setChatInput] = useState("");
@@ -403,15 +405,30 @@ export default function Dashboard() {
 
   const moveToCodex = async (item) => {
     try {
+      let finalDirector = item.director && item.director !== "N/A" ? item.director : "";
+      let finalGenre = item.genre && item.genre !== "N/A" ? item.genre : item.mediaType || "";
+      let finalRating = item.imdbRating && item.imdbRating !== "N/A" ? Number(item.imdbRating) : 0;
+
+      // Fetch full details if we have an imdbID to get accurate rating, director, etc.
+      if (item.imdbID && (!item.director || item.director === "N/A")) {
+        const detailsRes = await fetch(`${API_BASE_URL}/api/search/${item.imdbID}`, { headers: authHeaders() });
+        if (detailsRes.ok) {
+          const details = await detailsRes.json();
+          finalDirector = details.director && details.director !== "N/A" ? details.director : finalDirector;
+          finalGenre = details.genre && details.genre !== "N/A" ? details.genre : finalGenre;
+          finalRating = details.imdbRating && details.imdbRating !== "N/A" ? Number(details.imdbRating) : finalRating;
+        }
+      }
+
       const res = await fetch(`${API_BASE_URL}/api/movies`, {
         method: "POST",
         headers: authHeaders(),
         body: JSON.stringify({
           title: item.title,
           year: item.year ? Number(item.year.substring(0, 4)) : null,
-          director: item.director || "",
-          genre: item.genre || item.mediaType || "",
-          rating: 0,
+          director: finalDirector,
+          genre: finalGenre,
+          rating: finalRating,
           mediaType: item.mediaType
         }),
       });
@@ -433,9 +450,9 @@ export default function Dashboard() {
         body: JSON.stringify({
           title: details.title,
           year: details.year ? Number(details.year.substring(0, 4)) : null,
-          director: details.director || "",
-          genre: details.genre || "",
-          rating: 0,
+          director: details.director && details.director !== "N/A" ? details.director : "",
+          genre: details.genre && details.genre !== "N/A" ? details.genre : "",
+          rating: details.imdbRating && details.imdbRating !== "N/A" ? Number(details.imdbRating) : 0,
           mediaType: details.mediaType
         }),
       });
@@ -568,7 +585,7 @@ export default function Dashboard() {
     setChatLoading(true);
 
     try {
-      const conversationHistory = updatedMessages.slice(1).map((m) => ({ role: m.role, content: m.content }));
+      const conversationHistory = updatedMessages.slice(1).map((m) => ({ role: m.role, content: typeof m.content === "object" ? JSON.stringify(m.content) : m.content }));
       const res = await fetch(`${API_BASE_URL}/api/chat`, {
         method: "POST",
         headers: authHeaders(),
@@ -599,7 +616,13 @@ export default function Dashboard() {
         return;
       }
 
-      setChatMessages([...updatedMessages, { role: "assistant", content: data.reply }]);
+      let parsedReply = data.reply;
+      try {
+        parsedReply = JSON.parse(data.reply);
+      } catch (e) {
+        console.error("Failed to parse JSON reply:", e);
+      }
+      setChatMessages([...updatedMessages, { role: "assistant", content: parsedReply }]);
     } catch (err) {
       console.error("Chat error:", err);
       setChatError("Cannot reach the Arcane Advisor. Ensure the server is running.");
@@ -947,7 +970,31 @@ export default function Dashboard() {
                     <img src="/wizard.png" alt="" className="ai-msg-avatar" />
                     <span className="ai-msg-label">The Arcane Advisor</span>
                   </div>
-                  <div className="ai-msg-oracle">{msg.content}</div>
+                  <div className="ai-msg-oracle">
+                    {typeof msg.content === "object" ? (
+                      <>
+                        <div className="ai-chat-response">{msg.content.chat_response}</div>
+                        {msg.content.recommendations && msg.content.recommendations.length > 0 && (
+                          <div className="ai-recommendations">
+                            {msg.content.recommendations.map((rec, i) => (
+                              <div key={i} className="ai-rec-card">
+                                <div className="ai-rec-header">
+                                  <span className="ai-rec-title">{rec.title}</span>
+                                  {rec.year && <span className="ai-rec-year">({rec.year})</span>}
+                                </div>
+                                {rec.genres && rec.genres.length > 0 && (
+                                  <div className="ai-rec-genres">{rec.genres.join(", ")}</div>
+                                )}
+                                <div className="ai-rec-justification">{rec.justification}</div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      msg.content
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div key={idx} className="ai-msg ai-msg-user">

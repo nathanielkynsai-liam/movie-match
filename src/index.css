@@ -1648,6 +1648,57 @@ button {
   justify-content: center;
 }
 
+/* ── AI Structured Recommendations ── */
+.ai-chat-response {
+  margin-bottom: 12px;
+}
+
+.ai-recommendations {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.ai-rec-card {
+  background: rgba(201, 168, 76, 0.05);
+  border: 1px solid rgba(201, 168, 76, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.ai-rec-header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.ai-rec-title {
+  color: var(--gold-cream);
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.ai-rec-year {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.ai-rec-genres {
+  font-size: 0.75rem;
+  color: var(--gold-dark);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ai-rec-justification {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.85);
+}
+
 /* ── Responsive ── */
 @media (max-width: 640px) {
   .dashboard-header {
