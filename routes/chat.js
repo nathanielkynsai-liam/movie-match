@@ -114,7 +114,7 @@ ${watchlistContext}`,
     // ── MODEL CALL ──
     const client = getGroqClient();
     const chatCompletion = await client.chat.completions.create({
-      model: "openai/gpt-oss-120b",
+      model: "llama-3.3-70b-versatile",
       messages: messages,
       temperature: 0.8,
       max_tokens: 512,
