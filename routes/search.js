@@ -23,14 +23,11 @@ router.get("/search", auth, async (req, res) => {
     // Build OMDB URL
     let url = `${OMDB_BASE}?apikey=${apiKey}&s=${encodeURIComponent(q.trim())}`;
     
-    // Handle anime (OMDB treats anime as series)
-    let omdbType = type;
-    if (type === "anime") {
-      omdbType = "series";
-    }
+    // Anime handling removed; treat anime as series
+    // omdbType will be the same as type, no special case needed
 
-    if (omdbType && (omdbType === "movie" || omdbType === "series")) {
-      url += `&type=${omdbType}`;
+    if (type && (type === "movie" || type === "series")) {
+      url += `&type=${type}`;
     }
     if (page) {
       url += `&page=${page}`;

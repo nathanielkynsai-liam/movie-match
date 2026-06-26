@@ -52,16 +52,6 @@ function DirectorIcon() {
   );
 }
 
-function CalendarIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <line x1="16" y1="2" x2="16" y2="6" />
-      <line x1="8" y1="2" x2="8" y2="6" />
-      <line x1="3" y1="10" x2="21" y2="10" />
-    </svg>
-  );
-}
 
 function StarIcon({ filled = true }) {
   return (
@@ -812,7 +802,7 @@ export default function Dashboard() {
         {/* ── Add Movie Form (Manual) ── */}
         <div className="card">
           <div className="section-title">
-            <QuillIcon /> Add to Your Movies
+            <QuillIcon /> Add Movie
           </div>
           <form className="add-movie-form" onSubmit={addMovie}>
             <div className="form-row-top">
@@ -830,7 +820,7 @@ export default function Dashboard() {
               >
                 <option value="movie">Movie</option>
                 <option value="series">Series</option>
-                <option value="anime">Anime</option>
+
               </select>
               <input
                 id="add-director"
@@ -881,7 +871,7 @@ export default function Dashboard() {
         {/* ── Movie List (Codex) ── */}
         <div className="card">
           <div className="section-title">
-            <ScrollIcon /> Your Movies
+            <ScrollIcon /> Your Collection
             <span className="count-badge">
               {movies.length} {movies.length === 1 ? "title" : "titles"}
             </span>
@@ -909,7 +899,6 @@ export default function Dashboard() {
                         <select value={editMediaType} onChange={(e) => setEditMediaType(e.target.value)} style={{ width: "90px" }}>
                           <option value="movie">Movie</option>
                           <option value="series">Series</option>
-                          <option value="anime">Anime</option>
                         </select>
                         <input value={editDirector} onChange={(e) => setEditDirector(e.target.value)} placeholder="Director" style={{ flex: 1 }} />
                         <input value={editGenre} onChange={(e) => setEditGenre(e.target.value)} placeholder="Genre" style={{ flex: 1 }} />

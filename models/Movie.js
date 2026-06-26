@@ -31,7 +31,7 @@ const MovieSchema = new mongoose.Schema(
     },
     mediaType: {
       type: String,
-      enum: ["movie", "series", "anime", ""],
+      enum: ["movie", "series", ""],
       default: ""
     },
     createdBy: {

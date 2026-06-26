@@ -1174,11 +1174,6 @@ button {
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
-.type-anime {
-  background: rgba(236, 72, 153, 0.15);
-  color: #f472b6;
-  border: 1px solid rgba(236, 72, 153, 0.3);
-}
 
 /* ── Search Container ── */
 .search-container {
