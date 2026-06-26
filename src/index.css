@@ -1779,3 +1779,23 @@ button {
   position: relative;
   z-index: 1;
 }
+
+/* ── Logo Overrides ── */
+.logo-img {
+  height: 38px;
+  width: auto;
+  border-radius: 4px;
+}
+
+.auth-logo-container {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.logo-img-auth {
+  max-width: 280px;
+  height: auto;
+  border-radius: 8px;
+  border: 2px solid var(--border-subtle);
+  box-shadow: var(--shadow-gold);
+}

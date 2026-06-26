@@ -94,10 +94,9 @@ export default function Register() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <div className="logo-icon">
-          <FilmIcon size={42} />
+        <div className="auth-logo-container">
+          <img src="/logo-pixel.jpg" alt="Movie Match Logo" className="logo-img-auth" />
         </div>
-        <h1 className="logo">Movie Match</h1>
         <p className="subtitle">Create an account to track your movies</p>
 
         {error && <div className="error-msg">{error}</div>}

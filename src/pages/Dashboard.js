@@ -654,10 +654,7 @@ export default function Dashboard() {
       {/* ── Header ── */}
       <header className="dashboard-header">
         <div className="logo">
-          <span className="logo-icon">
-            <FilmIcon size={26} />
-          </span>
-          <span className="logo-text">Movie Match</span>
+          <img src="/logo-pixel.jpg" alt="Movie Match Logo" className="logo-img" />
         </div>
         <div className="user-info">
           <div className="user-avatar">
