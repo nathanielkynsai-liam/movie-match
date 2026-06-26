@@ -967,14 +967,36 @@ export default function Dashboard() {
                           <div className="ai-recommendations">
                             {msg.content.recommendations.map((rec, i) => (
                               <div key={i} className="ai-rec-card">
-                                <div className="ai-rec-header">
-                                  <span className="ai-rec-title">{rec.title}</span>
-                                  {rec.year && <span className="ai-rec-year">({rec.year})</span>}
-                                </div>
-                                {rec.genres && rec.genres.length > 0 && (
-                                  <div className="ai-rec-genres">{rec.genres.join(", ")}</div>
+                                {rec.poster && (
+                                  <div className="ai-rec-poster">
+                                    <img src={rec.poster} alt={rec.title} />
+                                  </div>
                                 )}
-                                <div className="ai-rec-justification">{rec.justification}</div>
+                                <div className="ai-rec-content">
+                                  <div className="ai-rec-header">
+                                    <span className="ai-rec-title">{rec.title}</span>
+                                    {rec.year && <span className="ai-rec-year">({rec.year})</span>}
+                                    {rec.mediaType && <MediaTypeBadge type={rec.mediaType} />}
+                                  </div>
+                                  {rec.genres && rec.genres.length > 0 && (
+                                    <div className="ai-rec-genres">{rec.genres.join(", ")}</div>
+                                  )}
+                                  <div className="ai-rec-justification">{rec.justification}</div>
+                                  <div className="ai-rec-actions">
+                                    <button 
+                                      className="btn-ghost btn-sm" 
+                                      onClick={() => addToWatchlist(rec)}
+                                    >
+                                      <PlusIcon /> Watchlist
+                                    </button>
+                                    <button 
+                                      className="btn-gold btn-sm" 
+                                      onClick={() => addToMoviesDirectly(rec)}
+                                    >
+                                      <CheckIcon /> Collection
+                                    </button>
+                                  </div>
+                                </div>
                               </div>
                             ))}
                           </div>

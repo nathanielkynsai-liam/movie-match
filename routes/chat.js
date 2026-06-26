@@ -130,12 +130,45 @@ ${watchlistContext}`,
     });
 
     // Extract the response
-    const reply = chatCompletion.choices?.[0]?.message?.content;
+    let reply = chatCompletion.choices?.[0]?.message?.content;
 
     if (!reply) {
       return res.status(502).json({
         error: "The oracle's vision is clouded. No response was received.",
       });
+    }
+
+    // ── OMDB ENRICHMENT ──
+    try {
+      const parsedReply = JSON.parse(reply);
+      if (parsedReply.recommendations && Array.isArray(parsedReply.recommendations)) {
+        const apiKey = process.env.OMDB_API_KEY;
+        if (apiKey) {
+          // Fetch OMDB data for each recommendation concurrently
+          await Promise.all(parsedReply.recommendations.map(async (rec) => {
+            try {
+              const omdbUrl = `https://www.omdbapi.com/?apikey=${apiKey}&t=${encodeURIComponent(rec.title)}&y=${rec.year || ''}`;
+              const response = await fetch(omdbUrl);
+              const data = await response.json();
+              if (data.Response !== "False") {
+                rec.poster = data.Poster !== "N/A" ? data.Poster : null;
+                rec.imdbID = data.imdbID;
+                rec.mediaType = data.Type;
+                rec.director = data.Director !== "N/A" ? data.Director : "";
+                // Use OMDB genre if available, fallback to AI genres joined
+                rec.genre = data.Genre !== "N/A" ? data.Genre : (rec.genres ? rec.genres.join(", ") : "");
+                rec.imdbRating = data.imdbRating !== "N/A" ? data.imdbRating : "0";
+              }
+            } catch (e) {
+              console.error(`OMDB enrichment failed for ${rec.title}:`, e);
+            }
+          }));
+        }
+      }
+      reply = JSON.stringify(parsedReply);
+    } catch (parseErr) {
+      console.error("Failed to parse LLM reply for enrichment:", parseErr);
+      // Proceed with original stringified reply if parsing fails
     }
 
     // Return structured success response

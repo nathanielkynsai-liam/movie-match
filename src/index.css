@@ -1660,6 +1660,31 @@ button {
   border: 1px solid rgba(201, 168, 76, 0.2);
   border-radius: 8px;
   padding: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.ai-rec-poster {
+  width: 70px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ai-rec-poster img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.ai-rec-content {
+  flex: 1;
+  min-width: 0;
 }
 
 .ai-rec-header {
@@ -1667,6 +1692,7 @@ button {
   align-items: baseline;
   gap: 8px;
   margin-bottom: 4px;
+  flex-wrap: wrap;
 }
 
 .ai-rec-title {
@@ -1692,6 +1718,23 @@ button {
   font-size: 0.9rem;
   line-height: 1.4;
   color: rgba(255, 255, 255, 0.85);
+}
+
+.ai-rec-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.ai-rec-actions button {
+  flex: 1;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 /* ── Responsive ── */
