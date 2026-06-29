@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import API_BASE_URL from "../config";
 
+
 export function useScrollReveal() {
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -26,11 +27,19 @@ export default function BoxOffice() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState("now-playing"); // "now-playing", "all-time"
+
   useScrollReveal();
 
   useEffect(() => {
+    setLoading(true);
+    setError(null);
     const token = localStorage.getItem("moviematch_token");
-    fetch(`${API_BASE_URL}/api/discover/box-office`, {
+    const url = activeTab === "all-time" 
+      ? `${API_BASE_URL}/api/discover/box-office?sort=all-time` 
+      : `${API_BASE_URL}/api/discover/box-office`;
+      
+    fetch(url, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -43,12 +52,26 @@ export default function BoxOffice() {
         setLoading(false); 
       })
       .catch(err => { console.error(err); setError(err.message); setLoading(false); });
-  }, []);
+  }, [activeTab]);
 
   return (
     <div className="page-content">
-      <div className="section-header fade-in-scroll">
-        <h2>Top Box Office</h2>
+      <div className="section-header fade-in-scroll" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+        <h2>{activeTab === "all-time" ? "All-Time Highest Grossing" : "Top Box Office"}</h2>
+        <div className="tab-container" style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
+          <button 
+            className={`btn-tab ${activeTab === 'now-playing' ? 'active' : ''}`}
+            onClick={() => setActiveTab('now-playing')}
+          >
+            Currently Playing
+          </button>
+          <button 
+            className={`btn-tab ${activeTab === 'all-time' ? 'active' : ''}`}
+            onClick={() => setActiveTab('all-time')}
+          >
+            All-Time Highest Grossing
+          </button>
+        </div>
       </div>
       {loading ? (
         <div className="spinner"></div>
@@ -61,6 +84,9 @@ export default function BoxOffice() {
         <div className="media-list">
           {items.map((item, idx) => (
             <div key={item.id} className="list-card fade-in-scroll" style={{ transitionDelay: `${(idx % 5) * 0.1}s` }}>
+              <div className="leaderboard-rank" style={{ display: activeTab === 'all-time' ? 'block' : 'none' }}>
+                #{idx + 1}
+              </div>
               <div className="list-poster">
                 <img src={item.poster} alt={item.title} />
               </div>

@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import API_BASE_URL from "../config";
-import { useScrollReveal } from "./BoxOffice"; // reuse hook
+import { useScrollReveal } from "./BoxOffice";
 
 export default function Trending() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("trending"); // "trending", "past-months", "time-machine"
+  const [activeTab, setActiveTab] = useState("week"); // "day", "week", "month", "year", "time-machine"
   const [timeMachineDate, setTimeMachineDate] = useState("1997-12"); // Default to Titanic era
 
   useScrollReveal();
@@ -15,9 +15,11 @@ export default function Trending() {
     setLoading(true);
     setError(null);
     const token = localStorage.getItem("moviematch_token");
-    let url = `${API_BASE_URL}/api/discover/${activeTab}`;
+    let url = "";
     if (activeTab === "time-machine") {
-      url += `?date=${timeMachineDate}`;
+      url = `${API_BASE_URL}/api/discover/time-machine?date=${timeMachineDate}`;
+    } else {
+      url = `${API_BASE_URL}/api/discover/trending?period=${activeTab}`;
     }
 
     fetch(url, {
@@ -63,28 +65,42 @@ export default function Trending() {
     <div className="page-content">
       <div className="section-header fade-in-scroll" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
         <h2>
-          {activeTab === "trending" ? "Trending This Week" : 
-           activeTab === "past-months" ? "Movies of the Past Few Months" : 
+          {activeTab === "day" ? "Trending Today" : 
+           activeTab === "week" ? "Trending This Week" : 
+           activeTab === "month" ? "Trending Past Month" : 
+           activeTab === "year" ? "Trending Past Year" : 
            "Time Machine ⏱️"}
         </h2>
-        <div className="tab-container" style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+        <div className="tab-container" style={{ display: 'flex', gap: '8px', marginTop: '16px', flexWrap: 'wrap' }}>
           <button 
-            className={`btn-tab ${activeTab === 'trending' ? 'active' : ''}`}
-            onClick={() => setActiveTab('trending')}
+            className={`btn-tab ${activeTab === 'day' ? 'active' : ''}`}
+            onClick={() => setActiveTab('day')}
+          >
+            Today
+          </button>
+          <button 
+            className={`btn-tab ${activeTab === 'week' ? 'active' : ''}`}
+            onClick={() => setActiveTab('week')}
           >
             This Week
           </button>
           <button 
-            className={`btn-tab ${activeTab === 'past-months' ? 'active' : ''}`}
-            onClick={() => setActiveTab('past-months')}
+            className={`btn-tab ${activeTab === 'month' ? 'active' : ''}`}
+            onClick={() => setActiveTab('month')}
           >
-            Past Few Months
+            Past Month
+          </button>
+          <button 
+            className={`btn-tab ${activeTab === 'year' ? 'active' : ''}`}
+            onClick={() => setActiveTab('year')}
+          >
+            Past Year
           </button>
           <button 
             className={`btn-tab ${activeTab === 'time-machine' ? 'active' : ''}`}
             onClick={() => setActiveTab('time-machine')}
           >
-            Time Machine
+            Time Machine ⏱️
           </button>
         </div>
       </div>

@@ -413,8 +413,6 @@ export default function Dashboard() {
           <CarouselSection title="Your Watchlist" emoji="📌" loading={loadingWatchlist} items={watchlist}
             onItemClick={item => handleResultClick({ ...item, mediaType: item.mediaType || "movie" })} showRating={false} />
 
-          <CarouselSection title="Your Rated Movies" emoji="⭐" loading={loadingFavorites} items={favorites}
-            onItemClick={item => handleResultClick({ ...item, mediaType: "movie" })} />
 
           <CarouselSection
             title={`Best ${topRatedType === "movie" ? "Movies" : "Series"} of All Time`}
