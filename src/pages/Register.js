@@ -6,23 +6,16 @@ import API_BASE_URL from "../config";
 function FilmIcon({ size = 40 }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="12" r="10" stroke="url(#goldGradR)" strokeWidth="1.5" fill="none" />
-      <circle cx="12" cy="12" r="3" stroke="url(#goldGradR)" strokeWidth="1.5" fill="none" />
-      <circle cx="12" cy="5" r="1.2" fill="#c9a84c" />
-      <circle cx="12" cy="19" r="1.2" fill="#c9a84c" />
-      <circle cx="5" cy="12" r="1.2" fill="#c9a84c" />
-      <circle cx="19" cy="12" r="1.2" fill="#c9a84c" />
-      <circle cx="7.05" cy="7.05" r="1" fill="#a07830" />
-      <circle cx="16.95" cy="7.05" r="1" fill="#a07830" />
-      <circle cx="7.05" cy="16.95" r="1" fill="#a07830" />
-      <circle cx="16.95" cy="16.95" r="1" fill="#a07830" />
-      <defs>
-        <linearGradient id="goldGradR" x1="0" y1="0" x2="24" y2="24">
-          <stop offset="0%" stopColor="#c9a84c" />
-          <stop offset="50%" stopColor="#f0d070" />
-          <stop offset="100%" stopColor="#a07830" />
-        </linearGradient>
-      </defs>
+      <circle cx="12" cy="12" r="10" stroke="#F5C518" strokeWidth="1.5" fill="none" />
+      <circle cx="12" cy="12" r="3" stroke="#F5C518" strokeWidth="1.5" fill="none" />
+      <circle cx="12" cy="5" r="1.2" fill="#F5C518" />
+      <circle cx="12" cy="19" r="1.2" fill="#F5C518" />
+      <circle cx="5" cy="12" r="1.2" fill="#F5C518" />
+      <circle cx="19" cy="12" r="1.2" fill="#F5C518" />
+      <circle cx="7.05" cy="7.05" r="1" fill="#F5C518" />
+      <circle cx="16.95" cy="7.05" r="1" fill="#F5C518" />
+      <circle cx="7.05" cy="16.95" r="1" fill="#F5C518" />
+      <circle cx="16.95" cy="16.95" r="1" fill="#F5C518" />
     </svg>
   );
 }
@@ -94,9 +87,7 @@ export default function Register() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <div className="auth-logo-container">
-          <img src="/logo-pixel.jpg" alt="Movie Match Logo" className="logo-img-auth" />
-        </div>
+
         <p className="subtitle">Create an account to track your movies</p>
 
         {error && <div className="error-msg">{error}</div>}

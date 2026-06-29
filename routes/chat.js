@@ -138,29 +138,29 @@ ${watchlistContext}`,
       });
     }
 
-    // ── OMDB ENRICHMENT ──
+    // ── TMDB ENRICHMENT (replaces OMDB due to hotlinking issues) ──
     try {
       const parsedReply = JSON.parse(reply);
       if (parsedReply.recommendations && Array.isArray(parsedReply.recommendations)) {
-        const apiKey = process.env.OMDB_API_KEY;
+        const apiKey = process.env.TMDB_API_KEY;
         if (apiKey) {
-          // Fetch OMDB data for each recommendation concurrently
+          // Fetch TMDB data for each recommendation concurrently
           await Promise.all(parsedReply.recommendations.map(async (rec) => {
             try {
-              const omdbUrl = `https://www.omdbapi.com/?apikey=${apiKey}&t=${encodeURIComponent(rec.title)}&y=${rec.year || ''}`;
-              const response = await fetch(omdbUrl);
+              const tmdbUrl = `https://api.themoviedb.org/3/search/multi?query=${encodeURIComponent(rec.title)}&api_key=${apiKey}&language=en-US&page=1`;
+              const response = await fetch(tmdbUrl);
               const data = await response.json();
-              if (data.Response !== "False") {
-                rec.poster = data.Poster !== "N/A" ? data.Poster : null;
-                rec.imdbID = data.imdbID;
-                rec.mediaType = data.Type;
-                rec.director = data.Director !== "N/A" ? data.Director : "";
-                // Use OMDB genre if available, fallback to AI genres joined
-                rec.genre = data.Genre !== "N/A" ? data.Genre : (rec.genres ? rec.genres.join(", ") : "");
-                rec.imdbRating = data.imdbRating !== "N/A" ? data.imdbRating : "0";
+              if (data.results && data.results.length > 0) {
+                // Find best match (avoid people)
+                const match = data.results.find(r => r.media_type !== "person") || data.results[0];
+                rec.poster = match.poster_path ? `https://image.tmdb.org/t/p/w500${match.poster_path}` : null;
+                rec.imdbID = match.id; // It's actually a TMDB ID, but frontend uses this key
+                rec.mediaType = match.media_type || "movie";
+                rec.genre = rec.genres ? rec.genres.join(", ") : "";
+                rec.imdbRating = match.vote_average ? match.vote_average.toFixed(1) : "0";
               }
             } catch (e) {
-              console.error(`OMDB enrichment failed for ${rec.title}:`, e);
+              console.error(`TMDB enrichment failed for ${rec.title}:`, e);
             }
           }));
         }

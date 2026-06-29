@@ -8,6 +8,7 @@ const movieRoutes = require("./routes/movies");
 const chatRoutes = require("./routes/chat");
 const searchRoutes = require("./routes/search");
 const watchlistRoutes = require("./routes/watchlist");
+const discoverRoutes = require("./routes/discover");
 
 const app = express();
 
@@ -24,6 +25,7 @@ app.use("/api/movies", movieRoutes);
 app.use("/api", chatRoutes);
 app.use("/api", searchRoutes);
 app.use("/api/watchlist", watchlistRoutes);
+app.use("/api/discover", discoverRoutes);
 
 const path = require("path");
 
