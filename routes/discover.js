@@ -264,21 +264,27 @@ router.get("/:type", auth, async (req, res) => {
     };
 
     if (isTop100) {
+      const pagePromises = [];
       for (let i = 1; i <= 5; i++) {
-        try {
-          const data = await fetchWithRetry(`${baseUrl}&page=${i}`);
-          if (data.results) {
-            allResults.push(...data.results);
-          }
-        } catch (err) {
+        pagePromises.push(fetchWithRetry(`${baseUrl}&page=${i}`).catch(err => {
           console.error(`Error fetching page ${i}:`, err);
-        }
+          return { results: [] };
+        }));
       }
+      const pagesData = await Promise.all(pagePromises);
+      pagesData.forEach(data => {
+        if (data && data.results) {
+          allResults.push(...data.results);
+        }
+      });
       allResults = allResults.slice(0, 100);
     } else {
       try {
         const data = await fetchWithRetry(`${baseUrl}&page=1`);
-        if (data.results) allResults = data.results.slice(0, 20);
+        if (data.results) {
+          const filtered = data.results.filter(r => r.media_type !== 'person');
+          allResults = filtered.slice(0, 20);
+        }
       } catch (err) {
         console.error("Error fetching discover results:", err);
       }

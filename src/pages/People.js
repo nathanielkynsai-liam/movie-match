@@ -11,7 +11,7 @@ export default function People() {
   const [actorDetails, setActorDetails] = useState(null);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
-  useScrollReveal();
+  useScrollReveal([loading, items]);
 
   useEffect(() => {
     const token = localStorage.getItem("moviematch_token");

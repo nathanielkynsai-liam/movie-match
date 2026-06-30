@@ -798,6 +798,28 @@ button {
   max-height: 90vh;
   overflow-y: auto;
   border: 1px solid var(--border-subtle);
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+.modal-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
 }
 
 .modal-header {
@@ -925,14 +947,15 @@ button {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: var(--bg-card-hover);
+  background: var(--bg-void);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: background var(--transition);
+  transition: background var(--transition), border-color var(--transition);
 }
 .ai-rec-card:hover {
   background: var(--bg-surface);
+  border-color: var(--border-active);
 }
 .ai-rec-poster {
   width: 45px;
@@ -1268,10 +1291,4 @@ button {
 .ai-chat-response {
   margin-bottom: 16px;
 }
-.ai-rec-card {
-  background: var(--bg-void);
-  border: 1px solid var(--border-subtle);
-}
-.ai-rec-card:hover {
-  border-color: var(--border-active);
-}
+

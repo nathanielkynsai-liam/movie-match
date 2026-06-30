@@ -2,25 +2,31 @@ import { useEffect, useState } from "react";
 import API_BASE_URL from "../config";
 
 
-export function useScrollReveal() {
+export function useScrollReveal(deps = []) {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add("is-visible");
+            observer.unobserve(entry.target);
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.1, rootMargin: "50px" }
     );
-    // Add small delay to let DOM render
-    setTimeout(() => {
-      const elements = document.querySelectorAll(".fade-in-scroll");
+    
+    const timeout = setTimeout(() => {
+      const elements = document.querySelectorAll(".fade-in-scroll:not(.is-visible)");
       elements.forEach((el) => observer.observe(el));
     }, 100);
-    return () => observer.disconnect();
-  });
+    
+    return () => {
+      clearTimeout(timeout);
+      observer.disconnect();
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
 }
 
 export default function BoxOffice() {
@@ -29,7 +35,7 @@ export default function BoxOffice() {
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("now-playing"); // "now-playing", "all-time"
 
-  useScrollReveal();
+  useScrollReveal([loading, items]);
 
   useEffect(() => {
     setLoading(true);

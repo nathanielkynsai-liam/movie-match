@@ -165,7 +165,7 @@ ${watchlistContext}`,
           }));
         }
       }
-      reply = JSON.stringify(parsedReply);
+      reply = parsedReply;
     } catch (parseErr) {
       console.error("Failed to parse LLM reply for enrichment:", parseErr);
       // Proceed with original stringified reply if parsing fails
@@ -173,7 +173,7 @@ ${watchlistContext}`,
 
     // Return structured success response
     res.json({
-      reply: reply.trim(),
+      reply: typeof reply === "string" ? reply.trim() : reply,
       model: chatCompletion.model,
       usage: {
         promptTokens: chatCompletion.usage?.prompt_tokens || 0,

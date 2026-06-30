@@ -85,7 +85,6 @@ function MediaTypeBadge({ type }) {
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  useScrollReveal();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchTypeFilter, setSearchTypeFilter] = useState("all");
@@ -119,6 +118,8 @@ export default function Dashboard() {
   const [chatLoading, setChatLoading] = useState(false);
   const [chatError, setChatError] = useState("");
   const chatEndRef = useRef(null);
+  
+  useScrollReveal([topRated, recommended, watchlist, searchResults, chatMessages]);
 
   const user = JSON.parse(localStorage.getItem("moviematch_user") || "null");
   const token = localStorage.getItem("moviematch_token");

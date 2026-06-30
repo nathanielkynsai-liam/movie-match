@@ -9,7 +9,7 @@ export default function Trending() {
   const [activeTab, setActiveTab] = useState("week"); // "day", "week", "month", "year", "time-machine"
   const [timeMachineDate, setTimeMachineDate] = useState("1997-12"); // Default to Titanic era
 
-  useScrollReveal();
+  useScrollReveal([loading, items]);
 
   useEffect(() => {
     setLoading(true);
